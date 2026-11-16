@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Creando Habilidades · Campus</title>
+
+<!-- Tipografías: Playfair Display (títulos) + DM Sans (interfaz y lectura) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+
+<!-- Aplica el tema guardado antes de pintar (evita parpadeo) -->
+<script>
+  try { var t = JSON.parse(localStorage.getItem('ch_estado') || '{}').tema; if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+
+<!-- Tailwind CSS + Lucide Icons vía CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.13"></script>
+<style type="text/tailwindcss">
+  /* Los colores de Tailwind apuntan a variables CSS: así un solo juego de clases sirve para ambos temas */
+  @theme {
+    --font-serif: "Playfair Display", Georgia, serif;
+    --font-sans: "DM Sans", system-ui, sans-serif;
+    --color-fondo: var(--bg);
+    --color-tinta: var(--text);
+    --color-muted: var(--muted);
+    --color-acento: var(--accent);
+    --color-linea: var(--border);
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+
+<style>
+/* ============================ Tokens de tema ============================ */
+:root { --ease: cubic-bezier(.22,.8,.24,1); }
+[data-theme="dark"] {
+  --bg: #0B0F17;
+  --glow-1: rgba(212,175,55,.10);  --glow-2: rgba(80,110,180,.10);
+  --card: rgba(255,255,255,.035);  --card-hover: rgba(255,255,255,.06);
+  --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.16);
+  --text: #F8FAFC;  --muted: #94A3B8;
+  --accent: #D4AF37; --accent-2: #E5C158; --accent-soft: rgba(212,175,55,.12);
+  --cta-bg: linear-gradient(135deg,#E5C158,#D4AF37); --cta-text: #0B0F17; --on-accent: #0B0F17;
+  --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 24px 60px -30px rgba(0,0,0,.7);
+  --ambient: 0 40px 90px -40px rgba(212,175,55,.28), 0 30px 60px -30px rgba(0,0,0,.8);
+  --track: rgba(255,255,255,.08);  --header: rgba(11,15,23,.72);
+}
+[data-theme="light"] {
+  --bg: #F8F7F4;
+  --glow-1: rgba(180,138,40,.10);  --glow-2: rgba(15,23,42,.04);
+  --card: #FFFFFF;  --card-hover: #FFFFFF;
+  --border: #E7E3DA; --border-strong: #CFC9BC;
+  --text: #0F172A;  --muted: #5B6577;
+  --accent: #B48A28; --accent-2: #C9A24A; --accent-soft: rgba(180,138,40,.10);
+  --cta-bg: #0F172A; --cta-text: #F8F7F4; --on-accent: #FFFFFF;
+  --shadow: 0 1px 2px rgba(15,23,42,.04), 0 6px 16px -6px rgba(15,23,42,.06), 0 28px 56px -28px rgba(15,23,42,.14);
+  --ambient: 0 40px 80px -40px rgba(15,23,42,.35), 0 12px 28px -12px rgba(15,23,42,.12);
+  --track: #ECE8DF;  --header: rgba(248,247,244,.8);
+}
+
+/* ============================ Base ============================ */
+body {
+  font-family: 'DM Sans', system-ui, sans-serif; color: var(--text); background: var(--bg);
+  min-height: 100vh; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  transition: background .5s var(--ease), color .5s var(--ease);
+}
+body::before { /* halo ambiental de fondo */
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(900px 520px at 85% -10%, var(--glow-1), transparent 65%),
+              radial-gradient(800px 600px at -10% 30%, var(--glow-2), transparent 60%);
+}
+h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; font-weight: 500; letter-spacing: -.01em; line-height: 1.15; text-wrap: balance; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+.eyebrow { font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.vista { animation: subir .6s var(--ease) both; }
+@keyframes subir { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* ============================ Componentes ============================ */
+.glass { /* tarjeta de vidrio esmerilado (oscuro) / blanco con sombra multicapa (claro) */
+  background: var(--card); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  transition: transform .45s var(--ease), border-color .35s, background .35s, box-shadow .45s;
+}
+a.glass:hover { transform: translateY(-5px); border-color: var(--border-strong); background: var(--card-hover); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px 22px; border-radius: 99px; font-weight: 600; font-size: .9rem;
+  border: 1px solid var(--border-strong);
+  transition: transform .35s var(--ease), box-shadow .35s, border-color .3s, background .3s, color .3s;
+}
+.btn:hover { transform: translateY(-2px); border-color: var(--accent); }
+.btn:active { transform: scale(.98); }
+.btn-cta { background: var(--cta-bg); color: var(--cta-text); border-color: transparent; box-shadow: 0 10px 30px -12px var(--accent); }
+.btn-cta:hover { border-color: transparent; box-shadow: 0 16px 36px -12px var(--accent); }
+.btn-cta.hecha { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); box-shadow: none; }
+
+.icon-btn {
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  border: 1px solid var(--border); transition: border-color .3s, background .3s, color .3s;
+}
+.icon-btn:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+[data-theme="dark"] .i-luna, [data-theme="light"] .i-sol { display: none; }
+
+/* Barra de progreso minimalista con brillo sutil */
+.bar { height: 4px; border-radius: 99px; background: var(--track); }
+.bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--accent); transition: width .9s var(--ease); }
+.bar > i[style*="width:0%"] { box-shadow: none; }
+
+/* Anillo de avance global */
+.anillo circle { fill: none; stroke-width: 5; }
+.anillo .pista { stroke: var(--track); }
+.anillo .valor { stroke: var(--accent); stroke-linecap: round; filter: drop-shadow(0 0 5px var(--accent)); transition: stroke-dashoffset 1.2s var(--ease); }
+
+/* Filtros tipo píldora */
+.pill { padding: 8px 18px; border-radius: 99px; font-size: .84rem; font-weight: 500; white-space: nowrap; border: 1px solid var(--border); color: var(--muted); transition: all .35s var(--ease); }
+.pill:hover { color: var(--text); border-color: var(--border-strong); }
+.pill.activa { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+/* Indicadores de estado */
+.badge { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 99px; font-size: .7rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge.curso { color: var(--text); border-color: var(--border-strong); }
+.badge.curso::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulso 2s ease-in-out infinite; }
+.badge.listo { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+@keyframes pulso { 50% { opacity: .35; } }
+
+/* Campo de texto */
+.campo { width: 100%; padding: 13px 16px; border-radius: 12px; color: var(--text); background: transparent; border: 1px solid var(--border-strong); transition: border-color .3s, box-shadow .3s; }
+.campo::placeholder { color: var(--muted); opacity: .8; }
+.campo:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+/* Check circular de lección */
+.dot { width: 20px; height: 20px; flex: none; border-radius: 50%; border: 1px solid var(--border-strong); display: grid; place-items: center; transition: all .35s var(--ease); }
+.dot svg { width: 12px; height: 12px; stroke-width: 3; opacity: 0; transform: scale(.4); transition: all .35s var(--ease); }
+.done .dot { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.done .dot svg { opacity: 1; transform: none; }
+
+/* Índice de lecciones (sidebar) */
+.item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; font-size: .88rem; border: 1px solid transparent; transition: background .3s, border-color .3s; }
+.item:hover { background: var(--card-hover); border-color: var(--border); }
+.item.actual { background: var(--accent-soft); border-color: var(--accent); }
+.sala.sin-indice .indice { display: none; }
+@media (min-width: 1024px) {
+  .sala { display: grid; grid-template-columns: 320px minmax(0,1fr); gap: 32px; align-items: start; }
+  .sala.sin-indice { grid-template-columns: minmax(0,1fr); }
+  .sala.sin-indice .contenido { max-width: 980px; margin-inline: auto; width: 100%; }
+}
+
+/* Reproductor 16:9 con sombra ambiental */
+.player { aspect-ratio: 16/9; border-radius: 20px; overflow: hidden; background: #000; position: relative; box-shadow: var(--ambient); border: 1px solid var(--border); }
+.player iframe { width: 100%; height: 100%; border: 0; display: block; }
+.player .vacio { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; text-align: center; gap: 8px; color: #94A3B8; padding: 24px; background: radial-gradient(circle at 50% 40%, #1a2233, #0B0F17 70%); }
+
+/* Pestañas */
+.tab { position: relative; padding: 14px 2px; font-size: .9rem; font-weight: 500; color: var(--muted); white-space: nowrap; transition: color .3s; display: inline-flex; align-items: center; gap: 8px; }
+.tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); transform: scaleX(0); transition: transform .45s var(--ease); }
+.tab:hover { color: var(--text); }
+.tab.activa { color: var(--accent); }
+.tab.activa::after { transform: scaleX(1); }
+.panel { animation: subir .45s var(--ease) both; }
+
+.temblar { animation: temblar .4s; }
+@keyframes temblar { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.sin-scroll::-webkit-scrollbar { display: none; } .sin-scroll { scrollbar-width: none; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ==========================================================================
+   1. CONFIGURACIÓN CENTRAL — editá solo este bloque para cargar contenidos
+   --------------------------------------------------------------------------
+   youtubeId  : lo que va después de "v=" en la URL del video (No Listado).
+                https://www.youtube.com/watch?v=AbCdEfGhIjK  →  "AbCdEfGhIjK"
+   drivePdfId : lo que va entre "/d/" y "/view" en el enlace del PDF de Drive.
+                https://drive.google.com/file/d/1AbC...xYz/view  →  "1AbC...xYz"
+   Ambos son opcionales: si quedan vacíos ("") se muestra un aviso elegante.
+   ========================================================================== */
+const PLATFORM_CONFIG = {
+  platformName: "Creando Habilidades",
+  tagline: "El lugar donde un equipo se convierte en referente.",
+  accessCode: "HABILIDADES2026",
+  modules: [
+    {
+      id: "negocio-01",
+      category: "Negocio",
+      title: "Fundamentos de un negocio rentable",
+      description: "Los números y decisiones que separan un emprendimiento ocupado de uno que realmente gana dinero.",
+      estimatedTime: "1 h 10 min",
+      lessons: [
+        {
+          id: "n1-l1", title: "El modelo de negocio en una página", duration: "18 min",
+          summary: "Antes de crecer hay que entender cómo gana dinero el negocio hoy. En esta clase armamos un mapa de una página con cliente, propuesta, canales, ingresos y costos, y lo usamos para detectar la pieza más débil del modelo.",
+          youtubeId: "", drivePdfId: "",
+          keyTakeaways: [
+            "Describí a tu cliente ideal en una sola oración, sin usar la palabra «todos».",
+            "Anotá tus tres fuentes de ingreso y qué porcentaje aporta cada una.",
+            "Marcá la pieza más débil del modelo y definí una acción para esta semana."
+          ]
+        },
+        {
+          id: "n1-l2", title: "Margen, precio y punto de equilibrio", duration: "24 min",
+          summary: "Vender más no siempre es ganar más. Repasamos cómo calcular el margen real por producto, cuándo conviene subir precios y cuántas ventas necesitás por mes para cubrir tus costos fijos.",
+          youtubeId: "", drivePdfId: "",
+          keyTakeaways: [
+            "Calculá el margen de contribución de tus tres productos más vendidos.",
+            "Sumá tus costos fijos mensuales y dividilos por el margen promedio: ese es tu punto de equilibrio.",
+            "Probá un aumento de precio del 5 % en un solo producto y medí el impacto durante 30 días.",
+            "Dejá de promocionar lo que vende mucho pero deja poco."
+          ]
+        },
+        {
+          id: "n1-l3", title: "Flujo de caja para no quedarse sin aire", duration: "28 min",
+          summary: "Muchos negocios rentables cierran por falta de caja. Vemos cómo proyectar ingresos y egresos a 13 semanas, anticipar los meses ajustados y negociar plazos con clientes y proveedores.",
+          youtubeId: "", drivePdfId: "",
+          keyTakeaways: [
+            "Armá una proyección de caja semanal para los próximos tres meses.",
+            "Identificá la semana con menor saldo y decidí hoy cómo cubrirla.",
+            "Reservá el equivalente a un mes de costos fijos antes de reinvertir."
+          ]
+        }
+      ]
+    },
+    {
+      id: "comercial-01",
+      category: "Inteligencia Comercial",
+      title: "Venta consultiva de alto valor",
+      description: "Un método para diagnosticar antes de proponer y cerrar acuerdos sin presionar ni bajar el precio.",
+      estimatedTime: "1 h 05 min",
+      lessons: [
+        {
+          id: "c1-l1", title: "Diagnóstico: las preguntas que abren la venta", duration: "22 min",
+          summary: "El cliente no compra tu producto, compra la solución a un problema que le duele. Aprendemos una secuencia de preguntas para descubrir la situación, el problema, su costo y el resultado que busca.",
+          youtubeId: "", drivePdfId: "",
+          keyTakeaways: [
+            "Prepará cinco preguntas abiertas antes de cada reunión.",
+            "Hablá menos del 40 % del tiempo en la primera conversación.",
+            "Pedile al cliente que le ponga un número al costo de no resolver el problema.",
+            "Cerrá cada reunión repitiendo con tus palabras lo que entendiste."
+          ]
+        },
+        {
+          id: "c1-l2", title: "La propuesta de valor en 90 segundos", duration: "19 min",
+          summary: "Una estructura breve para presentar tu oferta: a quién ayudás, qué resultado logra, cómo lo hacés distinto y qué prueba lo respalda. La practicamos con ejemplos reales del equipo.",
+          youtubeId: "", drivePdfId: "",
+          keyTakeaways: [
+            "Escribí tu propuesta con la fórmula: ayudo a X a lograr Y mediante Z.",
+            "Sumá una prueba concreta: un caso, un número o un testimonio.",
+            "Grabate diciéndola y recortá todo lo que supere los 90 segundos."
+          ]
+        },
+        {
+          id: "c1-l3", title: "Objeciones de precio sin dar descuentos", duration: "24 min",
+          summary: "«Es caro» casi nunca habla del precio. Vemos cómo distinguir una objeción real de una excusa, reencuadrar la conversación hacia el valor y ofrecer alternativas sin regalar margen.",
+          youtubeId: "", drivePdfId: "",
+          keyTakeaways: [
+            "Ante «es caro», preguntá: ¿comparado con qué?",
+            "Si tenés que ajustar, quitá alcance; no bajes el precio.",
+            "Llevá preparadas tres respuestas a tus objeciones más frecuentes."
+          ]
+        }
+      ]
+    },
+    {
+      id: "emocional-01",
+      category: "Inteligencia Emocional",
+      title: "Liderarse para liderar",
+      description: "Autoconocimiento, gestión de la presión y conversaciones difíciles para conducir equipos con calma.",
+      estimatedTime: "58 min",
+      lessons: [
+        {
+          id: "e1-l1", title: "Autoconciencia: tu patrón bajo presión", duration: "17 min",
+          summary: "Todos tenemos una reacción automática cuando algo sale mal. Reconocerla es el primer paso para elegir otra respuesta. Trabajamos con un registro simple de situaciones, emociones y conductas.",
+          youtubeId: "", drivePdfId: "",
+          keyTakeaways: [
+            "Llevá durante una semana un registro de tres momentos de tensión por día.",
+            "Nombrá la emoción con precisión: enojo no es lo mismo que frustración.",
+            "Detectá la señal física que aparece antes de reaccionar."
+          ]
+        },
+        {
+          id: "e1-l2", title: "Regular antes de responder", duration: "20 min",
+          summary: "Técnicas breves para bajar la activación en el momento: respiración, pausa deliberada y reencuadre. El objetivo no es dejar de sentir, sino decidir con la cabeza fría.",
+          youtubeId: "", drivePdfId: "",
+          keyTakeaways: [
+            "Usá la pausa de 90 segundos antes de contestar un mensaje que te alteró.",
+            "Practicá la respiración 4-6 dos veces al día, aunque estés en calma.",
+            "Cambiá «¿por qué me pasa esto?» por «¿qué puedo hacer ahora?».",
+            "No tomes decisiones importantes después de las 19 h."
+          ]
+        },
+        {
+          id: "e1-l3", title: "Conversaciones difíciles con el equipo", duration: "21 min",
+          summary: "Postergar una conversación incómoda siempre sale más caro. Un guion de cuatro pasos para dar feedback claro: hecho, impacto, pedido y acuerdo.",
+          youtubeId: "", drivePdfId: "",
+          keyTakeaways: [
+            "Describí el hecho sin adjetivos ni generalizaciones como «siempre» o «nunca».",
+            "Explicá el impacto en el equipo o en el cliente, no en tu ánimo.",
+            "Cerrá con un acuerdo concreto y una fecha de revisión."
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+/* ==========================================================================
+   2. ESTADO Y PERSISTENCIA (localStorage)
+   ========================================================================== */
+const CLAVE = 'ch_estado';
+const app = document.getElementById('app');
+const MODULOS = PLATFORM_CONFIG.modules;
+const LECCIONES = MODULOS.flatMap(m => m.lessons);
+
+// acceso: sesión iniciada · hechas: lecciones completadas · ultima: última lección vista por módulo
+let estado = { acceso: false, tema: 'dark', hechas: {}, ultima: {}, indiceCerrado: false };
+try { Object.assign(estado, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
+const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(estado)); } catch (e) {} };
+
+// Estado de interfaz (no se guarda)
+let filtro = 'Todos', busqueda = '', tabActiva = null;
+
+/* ==========================================================================
+   3. UTILIDADES
+   ========================================================================== */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const idValido = id => /^[\w-]{6,80}$/.test(id || '');           // evita inyectar algo raro en las URLs de embed
+const plano = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); // búsqueda sin tildes
+const ic = (nombre, cls = 'w-4 h-4') => `<i data-lucide="${nombre}" class="${cls}"></i>`;
+const iconos = () => window.lucide && lucide.createIcons();
+
+const hecha = id => !!estado.hechas[id];
+const cuenta = ls => ls.filter(l => hecha(l.id)).length;
+const pct = ls => ls.length ? Math.round(cuenta(ls) / ls.length * 100) : 0;
+
+// Estado de un módulo: Sin empezar / En curso / Completado
+function estadoModulo(m) {
+  const n = cuenta(m.lessons);
+  if (n === m.lessons.length && n > 0) return { txt: 'Completado', cls: 'listo', cta: 'Repasar' };
+  if (n > 0 || estado.ultima[m.id]) return { txt: 'En curso', cls: 'curso', cta: 'Continuar' };
+  return { txt: 'Sin empezar', cls: '', cta: 'Empezar' };
+}
+// Lección a la que conviene entrar: la última vista si sigue pendiente, o la primera pendiente
+function leccionDestino(m) {
+  const ult = m.lessons.find(l => l.id === estado.ultima[m.id]);
+  return (ult && !hecha(ult.id) ? ult : m.lessons.find(l => !hecha(l.id))) || ult || m.lessons[0];
+}
+const ruta = (m, l) => `#/m/${encodeURIComponent(m.id)}/${encodeURIComponent(l.id)}`;
+
+/* ==========================================================================
+   4. PORTAL DE ACCESO
+   ========================================================================== */
+function vistaAcceso() {
+  app.innerHTML = `
+  <div class="min-h-screen grid place-items-center px-5 py-10 relative">
+    <button class="icon-btn absolute top-5 right-5" data-accion="tema" aria-label="Cambiar tema">${ic('sun', 'w-4 h-4 i-sol')}${ic('moon', 'w-4 h-4 i-luna')}</button>
+    <form id="f-acceso" class="glass vista w-full max-w-md px-7 py-11 sm:px-10 text-center" novalidate>
+      <div class="w-14 h-14 mx-auto mb-7 rounded-2xl border border-acento text-acento grid place-items-center font-serif italic text-2xl">C</div>
+      <span class="eyebrow">Campus privado</span>
+      <h1 class="text-4xl mt-3">${esc(PLATFORM_CONFIG.platformName)}</h1>
+      <p class="text-muted mt-3 mb-9">${esc(PLATFORM_CONFIG.tagline)}</p>
+      <label for="codigo" class="block text-left text-[.7rem] tracking-[.14em] uppercase font-semibold text-muted mb-2">Código de acceso del equipo</label>
+      <input id="codigo" class="campo text-center tracking-[.2em]" type="password" autocomplete="off" placeholder="••••••••" required>
+      <button class="btn btn-cta w-full mt-5" type="submit">Ingresar al campus ${ic('arrow-right')}</button>
+      <p id="error" role="alert" class="text-sm mt-4 min-h-[1.4em]" style="color:#E26D5A"></p>
+    </form>
+  </div>`;
+  const f = document.getElementById('f-acceso');
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    if (f.codigo.value.trim().toUpperCase() !== PLATFORM_CONFIG.accessCode.toUpperCase()) {
+      document.getElementById('error').textContent = 'El código no es correcto. Revisalo e intentá de nuevo.';
+      f.classList.remove('temblar'); void f.offsetWidth; f.classList.add('temblar');
+      f.codigo.select();
+      return;
+    }
+    estado.acceso = true; guardar(); render();
+  });
+  f.codigo.focus();
+}
+
+/* ==========================================================================
+   5. BARRA SUPERIOR
+   ========================================================================== */
+function cabecera() {
+  const p = pct(LECCIONES);
+  return `
+  <header class="sticky top-0 z-20 border-b border-linea backdrop-blur-xl" style="background:var(--header)">
+    <div class="max-w-[1240px] mx-auto px-4 sm:px-6 py-3.5 flex items-center gap-3">
+      <a href="#/" class="flex items-center gap-3 mr-auto" aria-label="Ir al panel">
+        <span class="w-9 h-9 rounded-[10px] border border-acento text-acento grid place-items-center font-serif italic text-lg">C</span>
+        <span class="font-serif text-lg hidden sm:block">${esc(PLATFORM_CONFIG.platformName)}</span>
+      </a>
+      <div class="hidden md:flex items-center gap-3 text-xs text-muted mr-2">
+        <div class="bar w-28"><i data-global-bar style="width:${p}%"></i></div><span data-global-txt class="tabular-nums">${p}% completado</span>
+      </div>
+      <button class="icon-btn" data-accion="tema" aria-label="Cambiar tema">${ic('sun', 'w-4 h-4 i-sol')}${ic('moon', 'w-4 h-4 i-luna')}</button>
+      <button class="icon-btn" data-accion="salir" aria-label="Cerrar sesión" title="Cerrar sesión">${ic('log-out')}</button>
+    </div>
+  </header>`;
+}
+
+/* ==========================================================================
+   6. DASHBOARD EJECUTIVO
+   ========================================================================== */
+function tarjetaModulo(m) {
+  const e = estadoModulo(m), p = pct(m.lessons);
+  return `
+  <a href="${ruta(m, leccionDestino(m))}" class="glass group flex flex-col p-7">
+    <div class="flex items-center justify-between gap-3"><span class="eyebrow">${esc(m.category)}</span><span class="badge ${e.cls}">${e.txt}</span></div>
+    <h3 class="text-2xl mt-6">${esc(m.title)}</h3>
+    <p class="text-muted text-sm mt-3 mb-8">${esc(m.description)}</p>
+    <div class="mt-auto flex items-center justify-between text-xs text-muted tabular-nums mb-3">
+      <span class="flex items-center gap-4"><span class="flex items-center gap-1.5">${ic('clock', 'w-3.5 h-3.5')}${esc(m.estimatedTime)}</span><span>${cuenta(m.lessons)}/${m.lessons.length} clases</span></span>
+      <span>${p}%</span>
+    </div>
+    <div class="bar"><i style="width:${p}%"></i></div>
+    <span class="mt-6 text-sm font-semibold flex items-center gap-2 transition-all duration-500 group-hover:gap-3.5 group-hover:text-acento">${e.cta} ${ic('arrow-right')}</span>
+  </a>`;
+}
+
+// Devuelve los módulos que pasan el filtro de categoría y la búsqueda
+function modulosVisibles() {
+  const q = plano(busqueda.trim());
+  return MODULOS.filter(m =>
+    (filtro === 'Todos' || m.category === filtro) &&
+    (!q || plano([m.title, m.description, m.category, ...m.lessons.map(l => l.title)].join(' ')).includes(q)));
+}
+
+// Repinta solo la grilla (así el buscador no pierde el foco al escribir)
+function pintarGrilla() {
+  const g = document.getElementById('grilla'); if (!g) return;
+  const lista = modulosVisibles();
+  g.innerHTML = lista.length ? lista.map(tarjetaModulo).join('') : `
+    <div class="col-span-full text-center py-16 text-muted">
+      <p class="font-serif text-2xl text-tinta mb-2">Sin resultados</p>
+      <p class="mb-6">No hay módulos que coincidan con tu búsqueda.</p>
+      <button class="btn" data-accion="limpiar">Ver todos los módulos</button>
+    </div>`;
+  document.querySelectorAll('.pill').forEach(b => { const a = b.dataset.cat === filtro; b.classList.toggle('activa', a); b.setAttribute('aria-pressed', a); });
+  iconos();
+}
+
+function vistaDashboard() {
+  const p = pct(LECCIONES), n = cuenta(LECCIONES);
+  const modsListos = MODULOS.filter(m => pct(m.lessons) === 100).length;
+  const C = 2 * Math.PI * 54;
+  // Módulo sugerido para continuar: el primero en curso, o el primero sin completar
+  const sugerido = MODULOS.find(m => estadoModulo(m).cls === 'curso') || MODULOS.find(m => pct(m.lessons) < 100);
+  const categorias = ['Todos', ...new Set(MODULOS.map(m => m.category))];
+
+  return `
+  <div class="vista">
+    <!-- Resumen de avance -->
+    <section class="glass relative overflow-hidden p-7 sm:p-11 mb-14 grid gap-9 md:grid-cols-[1fr_auto] items-center">
+      <span class="absolute top-0 inset-x-11 h-px opacity-60" style="background:linear-gradient(90deg,transparent,var(--accent),transparent)"></span>
+      <div>
+        <span class="eyebrow">Tu avance</span>
+        <h1 class="text-4xl sm:text-5xl mt-4">${p === 100 ? 'Programa <em class="text-acento">completado</em>' : n === 0 ? 'Tu formación <em class="text-acento">empieza hoy</em>' : 'Seguí <em class="text-acento">construyendo</em>'}</h1>
+        <p class="text-muted mt-4 max-w-[52ch]">${p === 100 ? 'Completaste todas las clases. Volvé a cualquiera cuando quieras repasar.' : sugerido ? `Tu próxima clase es «${esc(leccionDestino(sugerido).title)}», del módulo ${esc(sugerido.title)}.` : ''}</p>
+        <div class="flex flex-wrap items-center gap-x-9 gap-y-5 mt-8">
+          ${sugerido ? `<a class="btn btn-cta" href="${ruta(sugerido, leccionDestino(sugerido))}">${ic('play')} ${n === 0 ? 'Empezar' : 'Continuar'}</a>` : ''}
+          <div><b class="font-serif font-medium text-2xl tabular-nums">${n}<span class="text-muted text-base">/${LECCIONES.length}</span></b><span class="block text-xs text-muted">clases completadas</span></div>
+          <div><b class="font-serif font-medium text-2xl tabular-nums">${modsListos}<span class="text-muted text-base">/${MODULOS.length}</span></b><span class="block text-xs text-muted">módulos completados</span></div>
+        </div>
+      </div>
+      <div class="anillo relative w-36 h-36 sm:w-44 sm:h-44" role="img" aria-label="${p}% de avance global">
+        <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90"><circle class="pista" cx="60" cy="60" r="54"/><circle class="valor" cx="60" cy="60" r="54" stroke-dasharray="${C}" stroke-dashoffset="${C}" data-off="${C * (1 - p / 100)}"/></svg>
+        <div class="absolute inset-0 grid place-content-center text-center"><b class="font-serif font-medium text-4xl sm:text-5xl leading-none tabular-nums">${p}%</b><span class="text-[.68rem] tracking-[.16em] uppercase text-muted mt-2">Avance global</span></div>
+      </div>
+    </section>
+
+    <!-- Filtros + buscador -->
+    <div class="flex flex-col lg:flex-row lg:items-center gap-5 mb-8">
+      <h2 class="text-3xl mr-auto">Módulos</h2>
+      <div class="flex gap-2 overflow-x-auto sin-scroll -mx-4 px-4 sm:mx-0 sm:px-0" role="group" aria-label="Filtrar por categoría">
+        ${categorias.map(c => `<button class="pill" data-accion="filtro" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+      </div>
+      <div class="relative lg:w-64">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none">${ic('search')}</span>
+        <input id="buscador" type="search" class="campo !rounded-full !py-2.5 !pl-11 text-sm" placeholder="Buscar módulo o clase" value="${esc(busqueda)}" aria-label="Buscar módulo o clase">
+      </div>
+    </div>
+    <div id="grilla" class="grid gap-6 md:grid-cols-2 xl:grid-cols-3"></div>
+  </div>`;
+}
+
+/* ==========================================================================
+   7. SALA DE ESTUDIO
+   ========================================================================== */
+const TABS = [
+  { id: 'pdf', txt: 'Material PDF (Guía)', icono: 'file-text' },
+  { id: 'claves', txt: 'Puntos Clave', icono: 'list-checks' },
+  { id: 'resumen', txt: 'Resumen', icono: 'align-left' }
+];
+
+function vistaSala(m, l) {
+  const i = m.lessons.indexOf(l), ant = m.lessons[i - 1], sig = m.lessons[i + 1];
+  const p = pct(m.lessons), ok = hecha(l.id);
+  const abierto = matchMedia('(min-width:1024px)').matches ? !estado.indiceCerrado : false; // en móvil arranca plegado
+  tabActiva = idValido(l.drivePdfId) ? 'pdf' : 'claves';
+
+  const video = idValido(l.youtubeId)
+    ? `<iframe src="https://www.youtube-nocookie.com/embed/${l.youtubeId}?rel=0&modestbranding=1" title="${esc(l.title)}" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`
+    : `<div class="vacio">${ic('play-circle', 'w-12 h-12 text-[#D4AF37] mb-1')}<strong class="text-slate-200">Video próximamente</strong><span class="text-sm">Esta clase todavía no tiene video cargado.</span></div>`;
+
+  const pdf = idValido(l.drivePdfId)
+    ? `<div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+         <p class="text-muted text-sm">Guía de trabajo de la clase. Podés leerla acá o abrirla aparte.</p>
+         <a class="btn" href="https://drive.google.com/file/d/${l.drivePdfId}/view" target="_blank" rel="noopener noreferrer">${ic('external-link')} Abrir en pestaña nueva</a>
+       </div>
+       <iframe class="w-full h-[70vh] min-h-[420px] rounded-2xl border border-linea bg-white" src="https://drive.google.com/file/d/${l.drivePdfId}/preview" title="Material PDF: ${esc(l.title)}" loading="lazy" allow="autoplay"></iframe>`
+    : `<div class="text-center py-12 text-muted">${ic('file-text', 'w-9 h-9 mx-auto mb-4 text-acento')}<p class="font-serif text-xl text-tinta mb-1">Material en preparación</p><p class="text-sm">La guía en PDF de esta clase estará disponible pronto.</p></div>`;
+
+  const claves = (l.keyTakeaways || []).length
+    ? `<ol class="space-y-5">${l.keyTakeaways.map((k, n) => `<li class="flex gap-5"><span class="font-serif italic text-2xl text-acento leading-none w-7 flex-none pt-0.5">${n + 1}</span><span class="max-w-[62ch]">${esc(k)}</span></li>`).join('')}</ol>`
+    : `<p class="text-muted">Esta clase no tiene puntos clave cargados.</p>`;
+
+  return `
+  <div class="vista">
+    <div class="flex items-center justify-between gap-4 mb-7">
+      <a href="#/" class="flex items-center gap-2 text-sm text-muted hover:text-acento transition-colors">${ic('arrow-left')} Panel</a>
+      <button class="btn !py-2 !px-4 !text-xs" data-accion="indice" aria-expanded="${abierto}" aria-controls="indice">${ic('panel-left')} <span>Índice del módulo</span></button>
+    </div>
+
+    <div class="sala ${abierto ? '' : 'sin-indice'}">
+      <!-- Índice de lecciones -->
+      <aside id="indice" class="indice glass p-5 mb-7 lg:mb-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7.5rem)] lg:overflow-auto">
+        <span class="eyebrow">${esc(m.category)}</span>
+        <h2 class="text-xl mt-2 mb-4">${esc(m.title)}</h2>
+        <div class="flex justify-between text-xs text-muted tabular-nums mb-2"><span data-mod-txt>${cuenta(m.lessons)} de ${m.lessons.length} clases</span><span data-mod-pct>${p}%</span></div>
+        <div class="bar mb-5"><i data-mod-bar style="width:${p}%"></i></div>
+        <nav class="space-y-1" aria-label="Clases del módulo">
+          ${m.lessons.map((x, n) => `
+          <a href="${ruta(m, x)}" data-item="${esc(x.id)}" class="item ${x.id === l.id ? 'actual' : ''} ${hecha(x.id) ? 'done' : ''}" ${x.id === l.id ? 'aria-current="page"' : ''}>
+            <span class="dot">${ic('check', '')}</span>
+            <span class="flex-1"><span class="block text-[.68rem] text-muted tracking-wider uppercase">Clase ${n + 1} · ${esc(x.duration)}</span>${esc(x.title)}</span>
+          </a>`).join('')}
+        </nav>
+      </aside>
+
+      <!-- Contenido de la clase -->
+      <div class="contenido min-w-0">
+        <div class="player">${video}</div>
+
+        <div class="flex flex-wrap items-start justify-between gap-x-8 gap-y-5 mt-9">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="eyebrow">Clase ${i + 1} de ${m.lessons.length} · ${esc(l.duration)}</span>
+              <span id="badge" class="badge ${ok ? 'listo' : 'curso'}">${ok ? 'Completado' : 'En curso'}</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl">${esc(l.title)}</h1>
+          </div>
+          <button id="completar" class="btn btn-cta w-full sm:w-auto ${ok ? 'hecha' : ''}" data-accion="completar" aria-pressed="${ok}">${ic('check')}<span>${ok ? 'Clase completada' : 'Marcar clase como completada'}</span></button>
+        </div>
+
+        <!-- Pestañas -->
+        <div class="flex gap-7 border-b border-linea mt-9 overflow-x-auto sin-scroll" role="tablist">
+          ${TABS.map(t => `<button class="tab ${t.id === tabActiva ? 'activa' : ''}" role="tab" data-accion="tab" data-tab="${t.id}" aria-selected="${t.id === tabActiva}">${ic(t.icono)}${t.txt}</button>`).join('')}
+        </div>
+        <div class="py-8 min-h-[220px]">
+          <div class="panel" data-panel="pdf" ${tabActiva === 'pdf' ? '' : 'hidden'}>${pdf}</div>
+          <div class="panel" data-panel="claves" ${tabActiva === 'claves' ? '' : 'hidden'}>${claves}</div>
+          <div class="panel" data-panel="resumen" ${tabActiva === 'resumen' ? '' : 'hidden'}><p class="text-lg leading-relaxed max-w-[66ch]">${esc(l.summary)}</p></div>
+        </div>
+
+        <!-- Navegación -->
+        <nav class="flex flex-col sm:flex-row justify-between gap-3 pt-7 border-t border-linea">
+          ${ant ? `<a class="btn" href="${ruta(m, ant)}">${ic('arrow-left')} Anterior</a>` : '<span></span>'}
+          ${sig ? `<a class="btn" href="${ruta(m, sig)}">Siguiente ${ic('arrow-right')}</a>` : `<a class="btn" href="#/">Volver al panel ${ic('arrow-right')}</a>`}
+        </nav>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Actualiza en vivo los indicadores de progreso sin recargar el video
+function pintarProgreso(m, l) {
+  const ok = hecha(l.id), pg = pct(LECCIONES), pm = pct(m.lessons), $ = s => document.querySelector(s);
+  const b = $('#completar');
+  b.classList.toggle('hecha', ok); b.setAttribute('aria-pressed', ok);
+  b.querySelector('span').textContent = ok ? 'Clase completada' : 'Marcar clase como completada';
+  const badge = $('#badge'); badge.className = 'badge ' + (ok ? 'listo' : 'curso'); badge.textContent = ok ? 'Completado' : 'En curso';
+  $(`[data-item="${CSS.escape(l.id)}"]`).classList.toggle('done', ok);
+  $('[data-mod-bar]').style.width = pm + '%'; $('[data-mod-pct]').textContent = pm + '%';
+  $('[data-mod-txt]').textContent = `${cuenta(m.lessons)} de ${m.lessons.length} clases`;
+  $('[data-global-bar]').style.width = pg + '%'; $('[data-global-txt]').textContent = pg + '% completado';
+}
+
+/* ==========================================================================
+   8. ENRUTADOR Y EVENTOS
+   ========================================================================== */
+let actual = null; // { m, l } cuando se está en la sala de estudio
+
+function render() {
+  if (!estado.acceso) { vistaAcceso(); iconos(); return; }
+
+  const r = location.hash.match(/^#\/m\/([^/]+)\/([^/]+)$/);
+  const m = r && MODULOS.find(x => x.id === decodeURIComponent(r[1]));
+  const l = m && m.lessons.find(x => x.id === decodeURIComponent(r[2]));
+  actual = l ? { m, l } : null;
+  if (l) { estado.ultima[m.id] = l.id; guardar(); }
+
+  app.innerHTML = cabecera() +
+    `<main class="max-w-[1240px] mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-24">${l ? vistaSala(m, l) : vistaDashboard()}</main>` +
+    `<footer class="text-center text-xs text-muted tracking-wide pb-10 px-4">${esc(PLATFORM_CONFIG.platformName)} · Campus privado</footer>`;
+  window.scrollTo(0, 0);
+
+  if (!l) {
+    pintarGrilla();
+    document.getElementById('buscador').addEventListener('input', e => { busqueda = e.target.value; pintarGrilla(); });
+    const anillo = document.querySelector('.anillo .valor'); // anima el anillo al entrar
+    requestAnimationFrame(() => requestAnimationFrame(() => anillo.style.strokeDashoffset = anillo.dataset.off));
+  }
+  iconos();
+}
+
+// Un solo listener para todos los botones (delegación por data-accion)
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-accion]'); if (!b) return;
+  switch (b.dataset.accion) {
+    case 'tema':
+      estado.tema = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = estado.tema; guardar(); break;
+    case 'salir':
+      estado.acceso = false; guardar(); location.hash = '#/'; render(); break; // el progreso se conserva
+    case 'filtro':
+      filtro = b.dataset.cat; pintarGrilla(); break;
+    case 'limpiar':
+      filtro = 'Todos'; busqueda = ''; document.getElementById('buscador').value = ''; pintarGrilla(); break;
+    case 'tab':
+      tabActiva = b.dataset.tab;
+      document.querySelectorAll('.tab').forEach(t => { const a = t.dataset.tab === tabActiva; t.classList.toggle('activa', a); t.setAttribute('aria-selected', a); });
+      document.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== tabActiva); break;
+    case 'indice': {
+      const cerrado = document.querySelector('.sala').classList.toggle('sin-indice');
+      b.setAttribute('aria-expanded', !cerrado);
+      if (matchMedia('(min-width:1024px)').matches) { estado.indiceCerrado = cerrado; guardar(); } break;
+    }
+    case 'completar':
+      if (hecha(actual.l.id)) delete estado.hechas[actual.l.id]; else estado.hechas[actual.l.id] = true;
+      guardar(); pintarProgreso(actual.m, actual.l); break;
+  }
+});
+window.addEventListener('hashchange', render);
+render();
+</script>
+</body>
+</html>
