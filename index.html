@@ -95,6 +95,7 @@ a.glass:hover { transform: translateY(-5px); border-color: var(--border-strong);
 .btn:active { transform: scale(.98); }
 .btn-cta { background: var(--cta-bg); color: var(--cta-text); border-color: transparent; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .btn-cta:hover { border-color: transparent; box-shadow: 0 6px 18px -8px var(--accent); }
+.btn.copiado { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 .btn-cta.hecha { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); box-shadow: none; }
 
 .icon-btn {
@@ -185,6 +186,9 @@ const PLATFORM_CONFIG = {
   platformName: "Creando Habilidades",
   tagline: "El lugar donde un equipo se convierte en referente.",
   accessCode: "HABILIDADES2026",
+  // WhatsApp de mentoría/soporte: código de país + número, solo dígitos (sin "+", espacios ni guiones).
+  // Ej. Argentina: "549" + código de área sin 0 + número sin 15. Si queda vacío (""), el botón no se muestra.
+  mentorWhatsapp: "5491100000000",
   modules: [
     {
       id: "negocio-01",
@@ -317,8 +321,9 @@ const app = document.getElementById('app');
 const MODULOS = PLATFORM_CONFIG.modules;
 const LECCIONES = MODULOS.flatMap(m => m.lessons);
 
-// acceso: sesión iniciada · hechas: lecciones completadas · ultima: última lección vista por módulo
-let estado = { acceso: false, tema: 'light', hechas: {}, ultima: {}, indiceCerrado: false };
+// acceso: sesión iniciada · nombre: nombre del socio (se conserva al cerrar sesión) · hechas: lecciones completadas
+// ultima: última lección vista por módulo · apuntes: apuntes personales indexados por id de lección
+let estado = { acceso: false, nombre: '', tema: 'light', hechas: {}, ultima: {}, apuntes: {}, indiceCerrado: false };
 try { Object.assign(estado, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
 const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(estado)); } catch (e) {} };
 
@@ -364,7 +369,9 @@ function vistaAcceso() {
       <span class="eyebrow">Campus privado</span>
       <h1 class="text-4xl mt-3">${esc(PLATFORM_CONFIG.platformName)}</h1>
       <p class="text-muted mt-3 mb-9">${esc(PLATFORM_CONFIG.tagline)}</p>
-      <label for="codigo" class="block text-left text-[.7rem] tracking-[.14em] uppercase font-semibold text-muted mb-2">Código de acceso del equipo</label>
+      <label for="nombre" class="block text-left text-[.7rem] tracking-[.14em] uppercase font-semibold text-muted mb-2">Tu nombre</label>
+      <input id="nombre" class="campo text-center" type="text" autocomplete="given-name" maxlength="40" placeholder="¿Cómo te llamás?" value="${esc(estado.nombre)}" required>
+      <label for="codigo" class="block text-left text-[.7rem] tracking-[.14em] uppercase font-semibold text-muted mb-2 mt-5">Código de acceso del equipo</label>
       <input id="codigo" class="campo text-center tracking-[.2em]" type="password" autocomplete="off" placeholder="••••••••" required>
       <button class="btn btn-cta w-full mt-5" type="submit">Ingresar al campus ${ic('arrow-right')}</button>
       <p id="error" role="alert" class="text-sm mt-4 min-h-[1.4em]" style="color:#E26D5A"></p>
@@ -373,15 +380,17 @@ function vistaAcceso() {
   const f = document.getElementById('f-acceso');
   f.addEventListener('submit', e => {
     e.preventDefault();
-    if (f.codigo.value.trim().toUpperCase() !== PLATFORM_CONFIG.accessCode.toUpperCase()) {
-      document.getElementById('error').textContent = 'El código no es correcto. Revisalo e intentá de nuevo.';
+    const nombre = f.nombre.value.trim().replace(/\s+/g, ' ');
+    const codigoOk = f.codigo.value.trim().toUpperCase() === PLATFORM_CONFIG.accessCode.toUpperCase();
+    if (!nombre || !codigoOk) {
+      document.getElementById('error').textContent = !nombre ? 'Escribí tu nombre para ingresar.' : 'El código no es correcto. Revisalo e intentá de nuevo.';
       f.classList.remove('temblar'); void f.offsetWidth; f.classList.add('temblar');
-      f.codigo.select();
+      if (!nombre) f.nombre.focus(); else f.codigo.select();
       return;
     }
-    estado.acceso = true; guardar(); render();
+    estado.nombre = nombre; estado.acceso = true; guardar(); render();
   });
-  f.codigo.focus();
+  (estado.nombre ? f.codigo : f.nombre).focus(); // si ya conocemos el nombre, va directo al código
 }
 
 /* ==========================================================================
@@ -461,8 +470,10 @@ function vistaDashboard() {
       <span class="absolute top-0 inset-x-11 h-px opacity-60" style="background:linear-gradient(90deg,transparent,var(--accent),transparent)"></span>
       <div>
         <span class="eyebrow">Tu avance</span>
-        <h1 class="text-4xl sm:text-5xl mt-4">${p === 100 ? 'Programa <em class="text-acento">completado</em>' : n === 0 ? 'Tu formación <em class="text-acento">empieza hoy</em>' : 'Seguí <em class="text-acento">construyendo</em>'}</h1>
-        <p class="text-muted mt-4 max-w-[52ch]">${p === 100 ? 'Completaste todas las clases. Volvé a cualquiera cuando quieras repasar.' : sugerido ? `Tu próxima clase es «${esc(leccionDestino(sugerido).title)}», del módulo ${esc(sugerido.title)}.` : ''}</p>
+        <h1 class="text-4xl sm:text-5xl mt-4">Hola, <em class="text-acento">${esc(estado.nombre)}</em></h1>
+        <p class="text-muted mt-4 max-w-[52ch]">${p === 100
+          ? 'Completaste todo el programa. Volvé a cualquier clase cuando quieras repasar.'
+          : (n === 0 ? 'Tu formación empieza hoy. ' : 'Seguí construyendo. ') + (sugerido ? `Tu próxima clase es «${esc(leccionDestino(sugerido).title)}», del módulo ${esc(sugerido.title)}.` : '')}</p>
         <div class="flex flex-wrap items-center gap-x-9 gap-y-5 mt-8">
           ${sugerido ? `<a class="btn btn-cta" href="${ruta(sugerido, leccionDestino(sugerido))}">${ic('play')} ${n === 0 ? 'Empezar' : 'Continuar'}</a>` : ''}
           <div><b class="font-serif font-medium text-2xl tabular-nums">${n}<span class="text-muted text-base">/${LECCIONES.length}</span></b><span class="block text-xs text-muted">clases completadas</span></div>
@@ -496,8 +507,10 @@ function vistaDashboard() {
 const TABS = [
   { id: 'pdf', txt: 'Material PDF (Guía)', icono: 'file-text' },
   { id: 'claves', txt: 'Puntos Clave', icono: 'list-checks' },
-  { id: 'resumen', txt: 'Resumen', icono: 'align-left' }
+  { id: 'resumen', txt: 'Resumen', icono: 'align-left' },
+  { id: 'apuntes', txt: 'Mis apuntes', icono: 'notebook-pen' }
 ];
+const TXT_GUARDADO = 'Guardado automático · solo en este dispositivo';
 
 function vistaSala(m, l) {
   const i = m.lessons.indexOf(l), ant = m.lessons[i - 1], sig = m.lessons[i + 1];
@@ -520,6 +533,10 @@ function vistaSala(m, l) {
   const claves = (l.keyTakeaways || []).length
     ? `<ol class="space-y-5">${l.keyTakeaways.map((k, n) => `<li class="flex gap-5"><span class="font-serif italic text-2xl text-acento leading-none w-7 flex-none pt-0.5">${n + 1}</span><span class="font-serif text-lg max-w-[62ch]">${esc(k)}</span></li>`).join('')}</ol>`
     : `<p class="text-muted">Esta clase no tiene puntos clave cargados.</p>`;
+
+  // Enlace de consulta por WhatsApp con mensaje prearmado (nombre del socio, módulo y clase)
+  const tel = String(PLATFORM_CONFIG.mentorWhatsapp || '').replace(/\D/g, '');
+  const wa = tel && `https://wa.me/${tel}?text=${encodeURIComponent(`Hola, soy ${estado.nombre}. Tengo una consulta sobre la clase «${l.title}» del módulo «${m.title}» de ${PLATFORM_CONFIG.platformName}.`)}`;
 
   return `
   <div class="vista">
@@ -567,7 +584,22 @@ function vistaSala(m, l) {
           <div class="panel" data-panel="pdf" ${tabActiva === 'pdf' ? '' : 'hidden'}>${pdf}</div>
           <div class="panel" data-panel="claves" ${tabActiva === 'claves' ? '' : 'hidden'}>${claves}</div>
           <div class="panel" data-panel="resumen" ${tabActiva === 'resumen' ? '' : 'hidden'}><p class="font-serif text-xl leading-relaxed max-w-[66ch]">${esc(l.summary)}</p></div>
+          <div class="panel" data-panel="apuntes" hidden>
+            <label for="apuntes" class="sr-only">Mis apuntes de esta clase</label>
+            <textarea id="apuntes" class="campo block font-serif text-lg leading-relaxed min-h-[260px] resize-y" placeholder="Anotá acá tus ideas, dudas y compromisos de esta clase…">${esc(estado.apuntes[l.id] || '')}</textarea>
+            <div class="flex flex-wrap items-center justify-between gap-4 mt-4">
+              <span id="apuntes-estado" class="flex items-center gap-2 text-xs text-muted" role="status">${ic('check', 'w-3.5 h-3.5 text-acento')}<span>${TXT_GUARDADO}</span></span>
+              <button class="btn !py-2 !px-4 !text-xs" data-accion="copiar">${ic('copy')}<span>Copiar apuntes</span></button>
+            </div>
+          </div>
         </div>
+
+        ${wa ? `
+        <!-- Consulta por WhatsApp -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-7">
+          <p class="text-sm text-muted">¿Te quedó alguna duda? Escribinos por WhatsApp.</p>
+          <a class="btn !py-2 !px-4 !text-xs" href="${esc(wa)}" target="_blank" rel="noopener noreferrer">${ic('message-circle')} Consultar sobre esta clase</a>
+        </div>` : ''}
 
         <!-- Navegación -->
         <nav class="flex flex-col sm:flex-row justify-between gap-3 pt-7 border-t border-linea">
@@ -592,13 +624,24 @@ function pintarProgreso(m, l) {
   $('[data-global-bar]').style.width = pg + '%'; $('[data-global-txt]').textContent = pg + '% completado';
 }
 
+// Copia los apuntes al portapapeles y lo confirma en el propio botón
+async function copiarApuntes(b) {
+  const area = document.getElementById('apuntes'), txt = b.querySelector('span');
+  let msg = '¡Copiado!';
+  if (!area.value.trim()) msg = 'Todavía no hay apuntes';
+  else try { await navigator.clipboard.writeText(area.value); }
+       catch (e) { area.select(); msg = document.execCommand('copy') ? '¡Copiado!' : 'No se pudo copiar'; } // respaldo para navegadores viejos
+  txt.textContent = msg; b.classList.toggle('copiado', msg === '¡Copiado!');
+  clearTimeout(b._t); b._t = setTimeout(() => { txt.textContent = 'Copiar apuntes'; b.classList.remove('copiado'); }, 2000);
+}
+
 /* ==========================================================================
    8. ENRUTADOR Y EVENTOS
    ========================================================================== */
 let actual = null; // { m, l } cuando se está en la sala de estudio
 
 function render() {
-  if (!estado.acceso) { vistaAcceso(); iconos(); return; }
+  if (!estado.acceso || !estado.nombre) { vistaAcceso(); iconos(); return; } // sin nombre guardado se vuelve a pedir
 
   const r = location.hash.match(/^#\/m\/([^/]+)\/([^/]+)$/);
   const m = r && MODULOS.find(x => x.id === decodeURIComponent(r[1]));
@@ -642,10 +685,22 @@ document.addEventListener('click', e => {
       b.setAttribute('aria-expanded', !cerrado);
       if (matchMedia('(min-width:1024px)').matches) { estado.indiceCerrado = cerrado; guardar(); } break;
     }
+    case 'copiar':
+      copiarApuntes(b); break;
     case 'completar':
       if (hecha(actual.l.id)) delete estado.hechas[actual.l.id]; else estado.hechas[actual.l.id] = true;
       guardar(); pintarProgreso(actual.m, actual.l); break;
   }
+});
+// Guardado automático de apuntes mientras se escribe
+let avisoApuntes;
+document.addEventListener('input', e => {
+  if (e.target.id !== 'apuntes' || !actual) return;
+  if (e.target.value.trim()) estado.apuntes[actual.l.id] = e.target.value; else delete estado.apuntes[actual.l.id];
+  guardar();
+  const aviso = document.querySelector('#apuntes-estado span'); aviso.textContent = 'Guardando…';
+  clearTimeout(avisoApuntes);
+  avisoApuntes = setTimeout(() => { const a = document.querySelector('#apuntes-estado span'); if (a) a.textContent = TXT_GUARDADO; }, 600);
 });
 window.addEventListener('hashchange', render);
 render();
