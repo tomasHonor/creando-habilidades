@@ -9,7 +9,7 @@
 <!-- Tipografías: Newsreader (títulos) + DM Sans (interfaz y lectura) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
 
 <!-- Aplica el tema guardado antes de pintar (evita parpadeo) -->
 <script>
@@ -23,6 +23,8 @@
   @theme {
     --font-serif: "Newsreader", Georgia, serif;
     --font-sans: "DM Sans", system-ui, sans-serif;
+    --text-xs: .8rem;      /* textos pequeños (etiquetas, ayudas) un poco más grandes */
+    --text-sm: .925rem;
     --color-fondo: var(--bg);
     --color-tinta: var(--text);
     --color-muted: var(--muted);
@@ -40,7 +42,7 @@
   --glow-1: transparent;  --glow-2: transparent;
   --card: #FFFFFF;  --card-hover: #FFFFFF;
   --border: #E8E6DC; --border-strong: #D1CFC5;
-  --text: #141413;  --muted: #6B6A63;
+  --text: #141413;  --muted: #5E5D56;
   --accent: #C96442; --accent-2: #D97757; --accent-soft: rgba(201,100,66,.09);
   --cta-bg: #C96442; --cta-text: #FFFFFF; --on-accent: #FFFFFF;
   --shadow: 0 1px 2px rgba(20,20,19,.03), 0 8px 24px -12px rgba(20,20,19,.08);
@@ -52,7 +54,7 @@
   --glow-1: transparent;  --glow-2: transparent;
   --card: #FAF4E4;  --card-hover: #FCF7EA;
   --border: #E2D5B8; --border-strong: #CDBF9E;
-  --text: #3E3022;  --muted: #7B6B53;
+  --text: #3E3022;  --muted: #6E5F48;
   --accent: #9E5427; --accent-2: #B4673A; --accent-soft: rgba(158,84,39,.10);
   --cta-bg: #9E5427; --cta-text: #FFF9EC; --on-accent: #FFF9EC;
   --shadow: 0 1px 2px rgba(62,48,34,.04), 0 8px 24px -12px rgba(62,48,34,.12);
@@ -64,7 +66,7 @@
   --glow-1: transparent;  --glow-2: transparent;
   --card: #30302E;  --card-hover: #353533;
   --border: rgba(255,255,255,.08); --border-strong: rgba(255,255,255,.17);
-  --text: #FAF9F5;  --muted: #A8A69D;
+  --text: #FAF9F5;  --muted: #B5B3AA;
   --accent: #D97757; --accent-2: #E08D70; --accent-soft: rgba(217,119,87,.14);
   --cta-bg: #D97757; --cta-text: #1F1E1D; --on-accent: #1F1E1D;
   --shadow: 0 1px 2px rgba(0,0,0,.2), 0 12px 32px -16px rgba(0,0,0,.5);
@@ -73,9 +75,10 @@
 }
 
 /* ============================ Base ============================ */
+html { font-size: 106.25%; } /* 17 px base: todo lo que está en rem (Tailwind incluido) crece un 6 % */
 body {
-  font-family: 'DM Sans', system-ui, sans-serif; color: var(--text); background: var(--bg);
-  min-height: 100vh; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  font-family: 'DM Sans', system-ui, sans-serif; font-weight: 450; color: var(--text); background: var(--bg);
+  min-height: 100vh; line-height: 1.65; -webkit-font-smoothing: antialiased;
   transition: background .5s var(--ease), color .5s var(--ease);
 }
 body::before { /* halo ambiental de fondo */
@@ -85,7 +88,7 @@ body::before { /* halo ambiental de fondo */
 }
 h1, h2, h3 { font-family: 'Newsreader', Georgia, serif; font-weight: 500; letter-spacing: -.015em; line-height: 1.15; text-wrap: balance; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
-.eyebrow { font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.eyebrow { font-size: .75rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
 .vista { animation: subir .6s var(--ease) both; }
 @keyframes subir { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
@@ -133,7 +136,7 @@ a.glass:hover { transform: translateY(-5px); border-color: var(--border-strong);
 .pill.activa { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
 /* Indicadores de estado */
-.badge { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 99px; font-size: .7rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+.badge { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 99px; font-size: .74rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
 .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .badge.curso { color: var(--text); border-color: var(--border-strong); }
 .badge.curso::before { background: var(--accent); animation: pulso 2s ease-in-out infinite; }
@@ -168,7 +171,7 @@ a.glass:hover { transform: translateY(-5px); border-color: var(--border-strong);
 .player .vacio { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; text-align: center; gap: 8px; color: #A8A69D; padding: 24px; background: radial-gradient(circle at 50% 40%, #3A3936, #1F1E1D 75%); }
 
 /* Pestañas */
-.tab { position: relative; padding: 14px 2px; font-size: .9rem; font-weight: 500; color: var(--muted); white-space: nowrap; transition: color .3s; display: inline-flex; align-items: center; gap: 8px; }
+.tab { position: relative; padding: 14px 2px; font-size: .95rem; font-weight: 500; color: var(--muted); white-space: nowrap; transition: color .3s; display: inline-flex; align-items: center; gap: 8px; }
 .tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); transform: scaleX(0); transition: transform .45s var(--ease); }
 .tab:hover { color: var(--text); }
 .tab.activa { color: var(--accent); }
@@ -189,7 +192,7 @@ a.glass:hover { transform: translateY(-5px); border-color: var(--border-strong);
 .seg.actual.done { box-shadow: 0 0 0 2px var(--card), 0 0 0 3px var(--accent); }
 
 /* Lectura: tamaño ajustable (A− / A+) */
-.lec { font-size: var(--lec, 1.2rem); line-height: 1.7; }
+.lec { font-size: var(--lec, 1.2rem); line-height: 1.7; font-weight: 450; }
 
 /* Puntos clave como checklist */
 .clave { display: flex; align-items: flex-start; gap: 8px; border-radius: 12px; padding: 0 8px 0 6px; transition: background .3s; }
@@ -615,7 +618,7 @@ function vistaDashboard() {
       </div>
       <div class="anillo relative w-36 h-36 sm:w-44 sm:h-44" role="img" aria-label="${p}% de avance global">
         <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90"><circle class="pista" cx="60" cy="60" r="54"/><circle class="valor" cx="60" cy="60" r="54" stroke-dasharray="${C}" stroke-dashoffset="${C}" data-off="${C * (1 - p / 100)}"/></svg>
-        <div class="absolute inset-0 grid place-content-center text-center"><b class="font-serif font-medium text-4xl sm:text-5xl leading-none tabular-nums">${p}%</b><span class="text-[.68rem] tracking-[.16em] uppercase text-muted mt-2">Avance global</span></div>
+        <div class="absolute inset-0 grid place-content-center text-center"><b class="font-serif font-medium text-4xl sm:text-5xl leading-none tabular-nums">${p}%</b><span class="text-[.72rem] tracking-[.16em] uppercase text-muted mt-2">Avance global</span></div>
       </div>
     </section>
 
@@ -697,11 +700,11 @@ function vistaSala(m, l) {
     <div class="no-foco flex items-center justify-between gap-4 mb-7">
       <a href="#/" class="flex items-center gap-2 text-sm text-muted hover:text-acento transition-colors">${ic('arrow-left')} Panel</a>
       <div class="flex items-center gap-2">
-        <button class="btn !py-2 !px-4 !text-xs whitespace-nowrap" data-accion="foco" title="Modo foco (F)">${ic('maximize-2')} <span>Modo foco</span></button>
-        <button class="btn !py-2 !px-4 !text-xs whitespace-nowrap" data-accion="indice" aria-expanded="${abierto}" aria-controls="indice">${ic('panel-left')} <span>Índice del módulo</span></button>
+        <button class="btn !py-2 !px-4 !text-[.8rem] whitespace-nowrap" data-accion="foco" title="Modo foco (F)" aria-label="Modo foco">${ic('maximize-2')} <span class="hidden sm:inline">Modo foco</span></button>
+        <button class="btn !py-2 !px-4 !text-[.8rem] whitespace-nowrap" data-accion="indice" aria-expanded="${abierto}" aria-controls="indice">${ic('panel-left')} <span>Índice<span class="hidden sm:inline"> del módulo</span></span></button>
       </div>
     </div>
-    <button class="btn !py-2 !px-4 !text-xs foco-salir" data-accion="foco" title="Salir del modo foco (Esc)">${ic('minimize-2')} <span>Salir del modo foco</span></button>
+    <button class="btn !py-2 !px-4 !text-[.8rem] foco-salir" data-accion="foco" title="Salir del modo foco (Esc)">${ic('minimize-2')} <span>Salir del modo foco</span></button>
 
     <div class="sala ${abierto ? '' : 'sin-indice'}">
       <!-- Índice de lecciones -->
@@ -714,7 +717,7 @@ function vistaSala(m, l) {
           ${m.lessons.map((x, n) => `
           <a href="${ruta(m, x)}" data-item="${esc(x.id)}" class="item ${x.id === l.id ? 'actual' : ''} ${hecha(x.id) ? 'done' : ''}" ${x.id === l.id ? 'aria-current="page"' : ''}>
             <span class="dot">${ic('check', '')}</span>
-            <span class="flex-1"><span class="block text-[.68rem] text-muted tracking-wider uppercase">Clase ${n + 1} · ${esc(x.duration)}</span>${esc(x.title)}</span>
+            <span class="flex-1"><span class="block text-[.72rem] text-muted tracking-wider uppercase">Clase ${n + 1} · ${esc(x.duration)}</span>${esc(x.title)}</span>
           </a>`).join('')}
         </nav>
       </aside>
@@ -756,9 +759,9 @@ function vistaSala(m, l) {
             <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
               <span id="apuntes-estado" class="flex items-center gap-2 text-xs text-muted" role="status">${ic('check', 'w-3.5 h-3.5 text-acento')}<span>${TXT_GUARDADO}</span></span>
               <div class="flex flex-wrap gap-2">
-                <button class="btn !py-2 !px-3 !text-xs" data-accion="lista" title="Convertir la línea en lista">${ic('list')}<span>Lista</span></button>
-                <button class="btn !py-2 !px-3 !text-xs" data-accion="exportar" title="Descargar como archivo de texto">${ic('download')}<span>Exportar .txt</span></button>
-                <button class="btn !py-2 !px-3 !text-xs" data-accion="copiar">${ic('copy')}<span>Copiar apuntes</span></button>
+                <button class="btn !py-2 !px-3 !text-[.8rem]" data-accion="lista" title="Convertir la línea en lista">${ic('list')}<span>Lista</span></button>
+                <button class="btn !py-2 !px-3 !text-[.8rem]" data-accion="exportar" title="Descargar como archivo de texto">${ic('download')}<span>Exportar .txt</span></button>
+                <button class="btn !py-2 !px-3 !text-[.8rem]" data-accion="copiar">${ic('copy')}<span>Copiar apuntes</span></button>
               </div>
             </div>
             <textarea id="apuntes" class="campo block font-serif lec min-h-[260px] resize-y" placeholder="Anotá acá tus ideas, dudas y compromisos de esta clase…">${esc(estado.apuntes[l.id] || '')}</textarea>
@@ -769,7 +772,7 @@ function vistaSala(m, l) {
         <!-- Consulta por WhatsApp -->
         <div class="no-foco flex flex-wrap items-center justify-between gap-4 pb-7">
           <p class="text-sm text-muted">¿Te quedó alguna duda? Escribinos por WhatsApp.</p>
-          <a class="btn !py-2 !px-4 !text-xs" href="${esc(wa)}" target="_blank" rel="noopener noreferrer">${ic('message-circle')} Consultar sobre esta clase</a>
+          <a class="btn !py-2 !px-4 !text-[.8rem]" href="${esc(wa)}" target="_blank" rel="noopener noreferrer">${ic('message-circle')} Consultar sobre esta clase</a>
         </div>` : ''}
 
         <!-- Navegación -->
@@ -842,7 +845,7 @@ function abrirTab(id) {
 
 // Tamaño de lectura (3 niveles)
 function aplicarFuente() {
-  document.documentElement.style.setProperty('--lec', ['1.05rem', '1.2rem', '1.4rem'][estado.fuente]);
+  document.documentElement.style.setProperty('--lec', ['1.1rem', '1.25rem', '1.45rem'][estado.fuente]);
   document.querySelectorAll('[data-accion="fuente"]').forEach(b => b.disabled = (+b.dataset.d < 0 && estado.fuente === 0) || (+b.dataset.d > 0 && estado.fuente === 2));
 }
 
